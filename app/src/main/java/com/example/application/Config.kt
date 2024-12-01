@@ -15,4 +15,10 @@ object Config {
     const val REWARD_ENDPOINT = "point/transaction/"
     const val MyLeaderBoard_ENDPOINT = "profile/rankings/my/"
     const val TopLeaderBoard_ENDPOINT = "profile/rankings/top3/"
+    const val MealSummary_ENDPOINT = "meal/summary/{date}/"
+    const val MealDetail_ENDPOINT = "meal/list/{date}"
+    const val MealUpdate_ENDPOINT = "meal/update/{id}"
+    const val MealDelete_ENDPOINT = "meal/delete/{id}"
+    const val MealSearch_ENDPOINT = "nutrition/foods/search/name/{food_name}/"
+    const val MealAdd_ENDPOINT = "meal/create/"
 }

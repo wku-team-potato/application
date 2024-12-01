@@ -100,10 +100,10 @@
                     android:id="@+id/quantity_edit_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:inputType="numberPassword"
                     android:minWidth="96dp"
                     android:paddingVertical="9dp"
-                    android:text="100" />
+                    android:text="100"
+                    android:textAlignment="textEnd"/>
 
             </com.google.android.material.textfield.TextInputLayout>
 

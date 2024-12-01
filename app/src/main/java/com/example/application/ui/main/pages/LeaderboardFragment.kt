@@ -1,5 +1,6 @@
 package com.example.application.ui.main.pages
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,6 +15,7 @@ import com.example.application.ui.leaderboard.function.repository.LeaderBoardRep
 import com.example.application.ui.leaderboard.function.service.LeaderBoardService
 import com.example.application.ui.leaderboard.function.viewmodel.LeaderBoardViewModel
 import com.example.application.ui.leaderboard.function.viewmodel.LeaderBoardViewModelFactory
+import com.example.application.ui.meals.CalorieActivity
 
 class LeaderboardFragment : BaseFragment() {
 
@@ -43,9 +45,19 @@ class LeaderboardFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        initUi()
         initViewModel()
         observeViewModel()
         loadRankings()
+    }
+
+    private fun initUi() = with(binding) {
+        toolbar.setOnMenuItemClickListener {
+            if (it.itemId == R.id.action_my) {
+                showMyPage()
+            }
+            return@setOnMenuItemClickListener true
+        }
     }
 
     private fun initViewModel() {

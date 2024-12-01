@@ -2,6 +2,7 @@ package com.example.application.ui.main
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -22,11 +23,14 @@ import com.example.application.ui.main.pages.LeaderboardFragment
 import com.example.application.ui.main.pages.RewardFragment
 import com.example.application.ui.main.pages.StoreFragment
 import com.example.application.ui.meals.FoodSearchActivity
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
-//    private lateinit var sessionManager: SessionManager
+    var selectedDate: String = java.time.LocalDate.now().toString()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,9 +42,6 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-//        sessionManager = SessionManager(this)
-//        Log.d("csrfToken", sessionManager.getCsrfToken().toString())
-
         ViewCompat.setOnApplyWindowInsetsListener(binding.viewPager) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.updateLayoutParams<CoordinatorLayout.LayoutParams> {
@@ -48,6 +49,11 @@ class MainActivity : AppCompatActivity() {
             }
             insets
         }
+
+        savedInstanceState?.let {
+            selectedDate = it.getString("selectedDate", selectedDate)
+        }
+
 
         initUi()
     }
@@ -102,8 +108,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         addButton.setOnClickListener {
+            Log.d("MainActivity", "Main -> FoodSearch with date: $selectedDate")
             startActivity(Intent(this@MainActivity, FoodSearchActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                putExtra("date", selectedDate)
             })
         }
     }
@@ -120,5 +127,10 @@ class MainActivity : AppCompatActivity() {
                 else -> StoreFragment()
             }
         }
+    }
+
+    fun updateSelectedDate(date: String) {
+        selectedDate = date
+        Log.d("MainActivity", "Updated date by HealthFragment: $selectedDate")
     }
 }

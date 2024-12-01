@@ -26,7 +26,7 @@
             android:name=".ui.meals.FoodSearchActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.meals.MealsActivity"
+            android:name=".ui.meals.MealActivity"
             android:exported="false" />
         <activity
             android:name=".ui.meals.CalorieActivity"

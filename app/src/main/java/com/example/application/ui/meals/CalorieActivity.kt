@@ -2,24 +2,42 @@ package com.example.application.ui.meals
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.application.R
+import com.example.application.RetrofitInstance
 import com.example.application.databinding.ActivityCalorieBinding
 import com.example.application.databinding.ItemCalorieBinding
+import com.example.application.ui.meals.function.repository.MealRepository
+import com.example.application.ui.meals.function.viewmodel.MealViewModel
+import com.example.application.ui.meals.function.viewmodel.MealViewModelFactory
 
 class CalorieActivity : AppCompatActivity() {
     private val binding by lazy { ActivityCalorieBinding.inflate(layoutInflater) }
+    private lateinit var mealViewModel: MealViewModel
+    private lateinit var selectedDate : String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(binding.root)
+
+        val repository = MealRepository(RetrofitInstance.mealService)
+        val factory = MealViewModelFactory(repository)
+        mealViewModel = ViewModelProvider(this, factory).get(MealViewModel::class.java)
+
+        selectedDate = intent.getStringExtra("selectedDate") ?: ""
+
+        Log.d("CalorieActivity", "Received date for API : $selectedDate")
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -27,56 +45,59 @@ class CalorieActivity : AppCompatActivity() {
         }
 
         initUi()
+        fetchMealSummary()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d("CalorieActivity", "onResume called, refreshing data for date: $selectedDate")
+        fetchMealSummary()
     }
 
     private fun initUi() = with(binding) {
         toolbar.setNavigationOnClickListener { finish() }
-        recyclerView.adapter = CalorieAdapter().apply {
-            onItemClickListener = {
-                startActivity(Intent(this@CalorieActivity, MealsActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    putExtra("title", it.mealTime)
-                })
-            }
-        }
+        recyclerView.layoutManager = LinearLayoutManager(this@CalorieActivity)
     }
 
-    private class CalorieAdapter : RecyclerView.Adapter<CalorieAdapter.CalorieItemViewHolder>() {
-        var onItemClickListener: ((CalorieModel) -> Unit)? = null
+    private fun fetchMealSummary() {
+        Log.d("CalorieActivity", "Fetching data for date: $selectedDate")
 
-        private val items = listOf(
-            CalorieModel("아침", 100),
-            CalorieModel("점심", 130),
-            CalorieModel("저녁", 0)
-        )
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CalorieItemViewHolder {
-            val inflater = LayoutInflater.from(parent.context)
-            val binding = ItemCalorieBinding.inflate(inflater, parent, false)
-            return CalorieItemViewHolder(binding)
+        mealViewModel.mealSummary.observe(this) { mealSummary ->
+            val mealList = listOf("아침", "점심", "저녁")
+            val calorieData = listOf(
+                mealSummary.breakfast.calorie.toIntOrZero(),
+                mealSummary.lunch.calorie.toIntOrZero(),
+                mealSummary.dinner.calorie.toIntOrZero()
+            )
+            updateAdapter(mealList, calorieData)
         }
 
-        override fun getItemCount() = items.size
+        // ViewModel에 API 요청 전달
+        mealViewModel.loadMealSummary(selectedDate)
+    }
 
-        override fun onBindViewHolder(holder: CalorieItemViewHolder, position: Int) {
-            val item = items[position]
+    private fun updateAdapter(mealList: List<String>, calorieData: List<Int>) {
+        binding.recyclerView.adapter = CalorieAdapter(mealList, calorieData).apply {
+            onItemClickListener = { mealTime ->
+                Log.d("CalorieActivity", "Clicked on: $mealTime")
 
-            with(holder.binding) {
-                root.setOnClickListener {
-                    onItemClickListener?.invoke(item)
+                val mealType = when (mealTime){
+                    "아침" -> "breakfast"
+                    "점심" -> "lunch"
+                    "저녁" -> "dinner"
+                    else -> ""
                 }
 
-                mealtimeTextView.text = item.mealTime
-                calorieTextView.text = "총 칼로리 %dkcal".format(item.calorie)
+                val intent = Intent(this@CalorieActivity, MealActivity::class.java).apply {
+                    putExtra("title", mealTime)
+                    putExtra("date", selectedDate)
+                    putExtra("mealType", mealType)
+                }
+                startActivity(intent)
             }
         }
-
-        class CalorieItemViewHolder(val binding: ItemCalorieBinding) :
-            RecyclerView.ViewHolder(binding.root)
     }
 
-    private data class CalorieModel(
-        val mealTime: String,
-        val calorie: Int,
-    )
+    // 확장 함수: Double -> Int 변환, null 또는 빈 값 처리
+    private fun Double?.toIntOrZero(): Int = this?.toInt() ?: 0
 }

@@ -54,6 +54,8 @@ class StoreFragment : BaseFragment() {
     override fun onResume() {
         super.onResume()
         storeViewModel.loadPoints()
+        storeViewModel.loadItems()
+
     }
 
     private fun initUi() = with(binding) {
